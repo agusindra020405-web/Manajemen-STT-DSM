@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\MemberController;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,4 +32,6 @@ Route::get('/admin/anggota', function () {
 })->name('admin.anggota');
 
 
+Route::resource('member', MemberController::class);
+Route::get('/admin/anggota', [MemberController::class, 'index']);
 Route::livewire('/member/create', 'pages::member.create');
