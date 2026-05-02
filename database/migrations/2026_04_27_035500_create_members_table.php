@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('members', function (Blueprint $table) {
             $table->id();
-            $table->string('nama');
-            $table->string('telepon');
-            $table->text('alamat');
+            $table->string('name');
+            $table->string('phone');
+            $table->text('address');
             $table->string('status')->default('Aktif'); // Memberikan nilai default "Aktif"
             $table->timestamps();
         });

@@ -9,6 +9,11 @@ class Member extends Model
 {
     use HasFactory;
 
-    // Tambahkan baris ini agar kolom bisa diisi
-    protected $fillable = ['nama', 'telepon', 'alamat', 'status'];
+    protected $fillable = ['name', 'phone', 'address', 'status'];
+
+    public function contributions()
+    {
+        // Satu anggota punya banyak riwayat iuran
+        return $this->hasMany(Contribution::class, 'member_id');
+    }
 }

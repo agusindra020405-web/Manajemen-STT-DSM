@@ -4,28 +4,37 @@
             <h2 class="text-2xl font-bold text-gray-800">Manajemen Anggota</h2>
             <p class="text-sm text-gray-500 mt-1">Kelola data seluruh anggota STT Dharma Satya Mandala.</p>
         </div>
-        <button
-            class="flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold shadow-lg shadow-emerald-900/10 transition-all">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <a href="{{ route('member.create') }}"
+            class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold transition-all">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
             </svg>
             Tambah Anggota
-        </button>
+        </a>
     </div>
 
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="p-6 border-b border-gray-50 bg-gray-50/50 flex flex-col md:flex-row gap-4">
-            <div class="relative flex-1">
+            {{-- Form Pencarian --}}
+            <form action="{{ route('member.index') }}" method="GET" class="relative flex-1">
                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
                 </span>
-                <input type="text"
+                <input type="text" name="search" value="{{ request('search') }}"
                     class="block w-full pl-10 pr-4 py-2.5 border-gray-200 rounded-xl bg-white focus:ring-emerald-500 focus:border-emerald-500 text-sm"
-                    placeholder="Cari berdasarkan nama, telepon, atau alamat...">
-            </div>
+                    placeholder="Cari berdasarkan nama, telepon, atau alamat..." onblur="this.form.submit()">
+                {{-- Form akan terkirim saat user klik di luar input atau tekan Enter --}}
+
+                @if (request('search'))
+                    <a href="{{ route('member.index') }}"
+                        class="absolute inset-y-0 right-0 flex items-center pr-3 text-rose-500 hover:text-rose-700 text-xs font-medium">
+                        Hapus Pencarian
+                    </a>
+                @endif
+            </form>
         </div>
 
         <div class="overflow-x-auto">
@@ -53,15 +62,15 @@
                                 <div class="flex items-center gap-3">
                                     <div
                                         class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
-                                        {{ substr($item->nama, 0, 1) }}
+                                        {{ substr($item->name, 0, 1) }}
                                     </div>
-                                    <span class="text-sm font-semibold text-gray-800">{{ $item->nama }}</span>
+                                    <span class="text-sm font-semibold text-gray-800">{{ $item->name }}</span>
                                 </div>
                             </td>
 
                             {{-- Memanggil kolom telepon, alamat, dan status dari database --}}
-                            <td class="px-6 py-4 text-sm text-gray-600">{{ $item->telepon }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600">{{ $item->alamat }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600">{{ $item->phone }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600">{{ $item->address }}</td>
                             <td class="px-6 py-4">
                                 <span
                                     class="px-3 py-1 text-xs font-medium rounded-full {{ $item->status == 'Aktif' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-600' }}">
@@ -84,7 +93,7 @@
 
                                     {{-- Tombol Hapus --}}
                                     <form action="{{ route('member.destroy', $item->id) }}" method="POST"
-                                        onsubmit="return confirm('Yakin ingin menghapus?')">
+                                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus anggota {{ $item->name }}?')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"

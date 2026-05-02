@@ -29,14 +29,14 @@
                 <span class="text-sm">Data Anggota</span>
             </a>
 
-            <a href="/iuran"
-                class="flex items-center gap-3 px-4 py-3 text-emerald-100/70 hover:text-white hover:bg-emerald-800/50 rounded-xl transition group">
-                <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <a href="{{ route('contributions.index') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all {{ request()->routeIs('iuran.*') ? 'bg-emerald-500/10 text-emerald-600 font-bold' : 'text-gray-400 hover:text-gray-600' }}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z">
+                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z">
                     </path>
                 </svg>
-                <span class="text-sm">Keuangan</span>
+                <span>Iuran</span>
             </a>
         </nav>
     </div>

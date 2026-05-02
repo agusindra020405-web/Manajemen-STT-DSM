@@ -1,37 +1,31 @@
 <?php
 
+use App\Http\Controllers\ContributionController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MemberController;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
-
+// Halaman Depan
 Route::get('/', function () {
     return view('welcome');
 });
 
-
+// Login
 Route::get('/login', function () {
     return view('pages.login');
 })->name('login');
 
+// Dashboard Utama
 Route::get('/admin', function () {
     return view('admin.index');
-});
+})->name('admin.dashboard');
 
-Route::get('/admin/anggota', function () {
-    return view('admin.anggota');
-})->name('admin.anggota');
-
-
+// Route::resource sudah mencakup index, create, store, edit, update, dan destroy.
 Route::resource('member', MemberController::class);
-Route::get('/admin/anggota', [MemberController::class, 'index']);
-Route::livewire('/member/create', 'pages::member.create');
+
+// Tambahkan rute ini agar menu "Data Anggota" di sidebar Anda tetap bekerja
+Route::get('/admin/anggota', [MemberController::class, 'index'])->name('admin.anggota');
+
+// Halaman Manajemen Iuran
+Route::resource('admin/contributions', ContributionController::class)->names([
+    'index' => 'contributions.index',
+]);
