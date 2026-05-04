@@ -6,24 +6,47 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">1. Target Iuran Bulan Ini</p>
-                <h3 class="text-xl font-bold text-gray-800 mt-2">Rp</h3>
-            </div>
-            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                <div class="flex justify-between items-start">
+            <!-- Card 1: Anggota Lunas -->
+            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
+                <div class="flex justify-between items-start relative z-10">
                     <div>
-                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">2. Iuran Terbayar</p>
-                        <h3 class="text-xl font-bold text-gray-800 mt-2">Rp</h3>
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">1. Sudah Bayar</p>
+                        <h3 class="text-xl font-bold text-gray-800 mt-2">{{ $totalLunas }} <span
+                                class="text-sm font-normal text-gray-500">Anggota</span></h3>
                     </div>
-
+                    <div class="bg-emerald-50 p-2 rounded-lg text-emerald-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
                 </div>
             </div>
-            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
-                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">3. Total Tunggakan</p>
-                <h3 class="text-xl font-bold text-gray-800 mt-2">Rp</h3>
-                <div class="absolute -right-2 -bottom-2 opacity-10 text-rose-600">
 
+            <!-- Card 2: Anggota Menunggak -->
+            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
+                <div class="flex justify-between items-start relative z-10">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">2. Menunggak</p>
+                        <h3 class="text-xl font-bold text-rose-600 mt-2">{{ $totalMenunggak }} <span
+                                class="text-sm font-normal text-gray-500">Anggota</span></h3>
+                    </div>
+                    <div class="bg-rose-50 p-2 rounded-lg text-rose-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Total Dana Terkumpul -->
+            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
+                <div class="relative z-10">
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">3. Total Uang Masuk</p>
+                    <h3 class="text-xl font-bold text-gray-800 mt-2">Rp {{ number_format($danaTerkumpul, 0, ',', '.') }}
+                    </h3>
                 </div>
             </div>
         </div>
@@ -52,21 +75,54 @@
         <div class="p-6 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
             <h3 class="font-bold text-gray-800 text-sm">Daftar Riwayat Iuran</h3>
             <div class="flex flex-wrap items-center gap-3">
-                <select class="text-sm border-gray-200 rounded-xl focus:ring-emerald-500 focus:border-emerald-500">
-                    <option>April 2026</option>
-                </select>
-                <select class="text-sm border-gray-200 rounded-xl focus:ring-emerald-500 focus:border-emerald-500">
-                    <option>Status: Semua</option>
-                </select>
-                <div class="relative">
-                    <input type="text" placeholder="Cari iuran..."
-                        class="pl-10 pr-4 py-2 border-gray-200 rounded-xl text-sm focus:ring-emerald-500">
-                    <svg class="w-4 h-4 absolute left-3 top-3 text-gray-400" fill="none" stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                </div>
+                <form action="{{ route('admin.contributions.index') }}" method="GET"
+                    class="flex flex-wrap items-center gap-3">
+                    <!-- Tetap bawa filter bulan & status saat search -->
+                    <select name="bulan" onchange="this.form.submit()"
+                        class="text-sm border-gray-200 rounded-xl focus:ring-emerald-500">
+                        @foreach (['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] as $m)
+                            <option value="{{ $m }}" {{ $bulanSekarang == $m ? 'selected' : '' }}>
+                                {{ $m }}</option>
+                        @endforeach
+                    </select>
+
+                    <select name="status" onchange="this.form.submit()"
+                        class="text-sm border-gray-200 rounded-xl focus:ring-emerald-500">
+                        <option value="">Status: Semua</option>
+                        <option value="PAID" {{ request('status') == 'PAID' ? 'selected' : '' }}>Status: Lunas
+                        </option>
+                        <option value="UNPAID" {{ request('status') == 'UNPAID' ? 'selected' : '' }}>Status: Menunggak
+                        </option>
+                    </select>
+
+                    <!-- Search Input -->
+                    <div class="relative">
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama ..."
+                            class="pl-10 pr-4 py-2 border-gray-200 rounded-xl text-sm focus:ring-emerald-500"
+                            onkeypress="if(event.keyCode == 13) { this.form.submit(); }">
+
+                        <div class="absolute left-3 top-2.5 text-gray-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+
+                        <!-- Tombol Reset Search -->
+                        @if (request('search'))
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                <a href="{{ route('admin.contributions.index', ['bulan' => $bulanSekarang]) }}"
+                                    class="text-gray-400 hover:text-rose-500 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+                </form>
+
             </div>
         </div>
 
@@ -106,20 +162,46 @@
                                         class="px-3 py-1 bg-rose-50 text-rose-600 text-[10px] font-bold rounded-full uppercase">Tertunggak</span>
                                 @endif
                             </td>
+
                             <td class="px-6 py-4 text-right">
-                                @if (!$member->contributions->first() || $member->contributions->first()->status != 'LUNAS')
-                                    <button
-                                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded-xl shadow-md shadow-emerald-200 transition">
-                                        Bayar via Midtrans
-                                    </button>
+                                @php
+                                    $isLunas =
+                                        $member->contributions->first() &&
+                                        $member->contributions->first()->status == 'PAID';
+                                @endphp
+
+                                @if (!$isLunas)
+                                    <!-- Tombol Bayar Tunai -->
+                                    <form action="{{ route('admin.contributions.payCash', $member->id) }}"
+                                        method="POST" class="inline">
+                                        @csrf
+                                        <input type="hidden" name="bulan" value="{{ $bulanSekarang }}">
+                                        <input type="hidden" name="tahun" value="{{ $tahunSekarang }}">
+
+                                        <button type="submit"
+                                            onclick="return confirm('Konfirmasi pembayaran tunai untuk {{ $member->name }}?')"
+                                            class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded-xl shadow-md shadow-emerald-200 transition flex items-center gap-2 ml-auto">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                                    d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            Konfirmasi Tunai
+                                        </button>
+                                    </form>
                                 @else
-                                    <button class="p-2 text-gray-400 hover:text-emerald-600">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path
-                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                            </path>
-                                        </svg>
-                                    </button>
+                                    <!-- Ikon centang jika sudah lunas -->
+                                    <div
+                                        class="flex items-center justify-end text-emerald-600 font-bold text-[10px] gap-2">
+                                        <span class="bg-emerald-100 p-1 rounded-full">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                                    d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </span>
+                                        Tercatat
+                                    </div>
                                 @endif
                             </td>
                         </tr>

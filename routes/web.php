@@ -29,3 +29,10 @@ Route::get('/admin/anggota', [MemberController::class, 'index'])->name('admin.an
 Route::resource('admin/contributions', ContributionController::class)->names([
     'index' => 'contributions.index',
 ]);
+
+
+Route::get('/admin/contributions', [ContributionController::class, 'index'])->name('admin.contributions.index');
+
+// untuk pembayaran cash
+Route::post('/admin/contributions/pay-cash/{member_id}', [ContributionController::class, 'payCash'])
+    ->name('admin.contributions.payCash');
