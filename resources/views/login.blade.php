@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-guest-layout>
     <main class="relative min-h-screen flex items-center justify-center overflow-hidden bg-slate-950">
         <div class="absolute inset-0 z-0">
             <img src="{{ asset('img/background-hero.jpeg') }}" class="w-full h-full object-cover opacity-30">
@@ -14,12 +14,15 @@
                     <p class="text-slate-400 mt-2">Silahkan masuk ke akun Anda</p>
                 </div>
 
-                <form action="#" method="POST" class="space-y-6">
+                <form action="/login" method="POST" class="space-y-6">
                     @csrf
                     <div>
                         <label class="block text-sm font-medium text-emerald-400 mb-2">Username / Email</label>
-                        <input type="text" name="identity" required
+                        <input type="text" name="email" required
                             class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-emerald-500/50 transition outline-none">
+                        @error('email')
+                            <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
+                        @enderror
                     </div>
 
                     <div>
@@ -36,4 +39,4 @@
             </div>
         </div>
     </main>
-</x-app-layout>
+</x-guest-layout>

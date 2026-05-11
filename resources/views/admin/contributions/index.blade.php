@@ -123,6 +123,10 @@
                     </div>
                 </form>
 
+                <button onclick="openModal()"
+                    class="px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl shadow-md hover:bg-emerald-700 transition">
+                    + Buat Iuran Baru
+                </button>
             </div>
         </div>
 
@@ -140,6 +144,15 @@
                 </thead>
                 <tbody class="divide-y divide-gray-50 text-sm">
                     @foreach ($members as $index => $member)
+                        @php
+                            // Ambil data iuran untuk baris ini agar variabel $contribution tersedia.
+                            // Jika ada record PAID dan UNPAID pada periode yang sama, gunakan yang sudah dibayar.
+                            $contribution =
+                                $member->contributions->where('status', 'PAID')->first() ??
+                                $member->contributions->first();
+                            $isLunas = $contribution && $contribution->status == 'PAID';
+                        @endphp
+
                         <tr class="hover:bg-gray-50/50 transition">
                             <td class="px-6 py-4 text-gray-500">{{ $members->firstItem() + $index }}</td>
                             <td class="px-6 py-4">
@@ -154,7 +167,7 @@
                             <td class="px-6 py-4 text-gray-600 text-xs text-center">{{ $bulanSekarang }}</td>
                             <td class="px-6 py-4 font-medium text-gray-800">Rp 50.000</td>
                             <td class="px-6 py-4">
-                                @if ($member->contributions->first() && $member->contributions->first()->status == 'PAID')
+                                @if ($isLunas)
                                     <span
                                         class="px-3 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-full uppercase">Lunas</span>
                                 @else
@@ -164,48 +177,70 @@
                             </td>
 
                             <td class="px-6 py-4 text-right">
-                                @php
-                                    $isLunas =
-                                        $member->contributions->first() &&
-                                        $member->contributions->first()->status == 'PAID';
-                                @endphp
+                                <div class="flex items-center justify-end gap-2">
+                                    @if (!$isLunas)
+                                        <form action="{{ route('admin.contributions.payCash', $member->id) }}"
+                                            method="POST" class="inline">
+                                            @csrf
+                                            <input type="hidden" name="bulan" value="{{ $bulanSekarang }}">
+                                            <input type="hidden" name="tahun" value="{{ $tahunSekarang }}">
 
-                                @if (!$isLunas)
-                                    <!-- Tombol Bayar Tunai -->
-                                    <form action="{{ route('admin.contributions.payCash', $member->id) }}"
-                                        method="POST" class="inline">
-                                        @csrf
-                                        <input type="hidden" name="bulan" value="{{ $bulanSekarang }}">
-                                        <input type="hidden" name="tahun" value="{{ $tahunSekarang }}">
+                                            <button type="submit"
+                                                onclick="return confirm('Konfirmasi pembayaran tunai untuk {{ $member->name }}?')"
+                                                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded-xl shadow-md transition flex items-center gap-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3"
+                                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="3" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                Konfirmasi Tunai
+                                            </button>
+                                        </form>
+                                    @else
+                                        <div
+                                            class="flex items-center text-emerald-600 font-bold text-[10px] gap-2 mr-2">
+                                            <span class="bg-emerald-100 p-1 rounded-full">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3"
+                                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="3" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            </span>
+                                            Tercatat
+                                        </div>
 
-                                        <button type="submit"
-                                            onclick="return confirm('Konfirmasi pembayaran tunai untuk {{ $member->name }}?')"
-                                            class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded-xl shadow-md shadow-emerald-200 transition flex items-center gap-2 ml-auto">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none"
-                                                viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                                    d="M5 13l4 4L19 7" />
-                                            </svg>
-                                            Konfirmasi Tunai
-                                        </button>
-                                    </form>
-                                @else
-                                    <!-- Ikon centang jika sudah lunas -->
-                                    <div
-                                        class="flex items-center justify-end text-emerald-600 font-bold text-[10px] gap-2">
-                                        <span class="bg-emerald-100 p-1 rounded-full">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none"
-                                                viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                                    d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        </span>
-                                        Tercatat
-                                    </div>
-                                @endif
+                                        {{-- Tombol Batal --}}
+                                        @if (isset($contribution->id))
+                                            <button type="button"
+                                                onclick="openCancelModal('{{ $contribution->id }}', '{{ $member->name }}')"
+                                                class="p-2 bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-lg border border-rose-100 transition-colors"
+                                                title="Batalkan Pembayaran">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4"
+                                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+
+                                            {{-- Tombol Cetak PDF (Link Biasa/GET) --}}
+                                            <a href="{{ route('admin.contributions.print', $contribution->id) }}"
+                                                target="_blank"
+                                                class="p-2 bg-gray-50 hover:bg-emerald-50 text-gray-400 hover:text-emerald-600 rounded-lg border border-gray-100 transition-colors"
+                                                title="Cetak Invoice PDF">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4"
+                                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                                </svg>
+                                            </a>
+                                        @endif
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @endforeach
+
                 </tbody>
             </table>
             <div class="px-6 py-4 border-t border-gray-50 bg-gray-50/30">
@@ -222,4 +257,118 @@
             </div>
         </div>
     </div>
+
+    <!-- membuat iuran baru -->
+    <div id="modalIuranKolektif" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900 bg-opacity-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+                <div class="p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Buat Tagihan Baru</h3>
+
+                    <form action="{{ route('admin.contributions.storeKolektif') }}" method="POST">
+                        @csrf
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Bulan Iuran</label>
+                                <select name="bulan_kolektif" class="w-full border-gray-200 rounded-xl text-sm">
+                                    @foreach (['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] as $m)
+                                        <option value="{{ $m }}" {{ date('F') == $m ? 'selected' : '' }}>
+                                            {{ $m }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Tahun</label>
+                                <input type="number" name="tahun_kolektif" value="{{ date('Y') }}"
+                                    class="w-full border-gray-200 rounded-xl text-sm">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Nominal
+                                    (Rp)</label>
+                                <input type="number" name="nominal_kolektif" value="50000"
+                                    class="w-full border-gray-200 rounded-xl text-sm">
+                            </div>
+
+                            <div class="p-3 bg-emerald-50 rounded-lg">
+                                <p class="text-[11px] text-emerald-700 leading-relaxed">
+                                    <strong>Info:</strong> Tagihan akan dibuat otomatis untuk <strong>seluruh
+                                        anggota</strong>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end gap-3 mt-6">
+                            <button type="button" onclick="closeModal()"
+                                class="text-sm font-bold text-gray-500 hover:text-gray-700">Batal</button>
+                            <button type="submit"
+                                class="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition">
+                                Simpan & Kirim
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Batal -->
+    <div id="modalBatal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900 bg-opacity-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+                <div class="p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">Batalkan Pembayaran</h3>
+                    <p class="text-xs text-gray-500 mb-4">Anggota: <span id="cancelMemberName"
+                            class="font-bold text-gray-700"></span></p>
+
+                    <form id="formBatal" method="POST">
+                        @csrf
+                        @method('POST')
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Alasan
+                                    Pembatalan</label>
+                                <textarea name="reason_cancel" required class="w-full border-gray-200 rounded-xl text-sm focus:ring-rose-500"
+                                    placeholder="Contoh: Salah klik" rows="3"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end gap-3 mt-6">
+                            <button type="button" onclick="closeCancelModal()"
+                                class="text-sm font-bold text-gray-500 hover:text-gray-700">Tutup</button>
+                            <button type="submit"
+                                class="px-6 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold rounded-xl transition">
+                                Konfirmasi Batalkan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </x-app-layout>
+
+<script>
+    function openModal() {
+        document.getElementById('modalIuranKolektif').classList.remove('hidden');
+    }
+
+    function closeModal() {
+        document.getElementById('modalIuranKolektif').classList.add('hidden');
+    }
+
+    function openCancelModal(id, name) {
+        // Set nama anggota di modal
+        document.getElementById('cancelMemberName').innerText = name;
+        // Set action form secara dinamis
+        const form = document.getElementById('formBatal');
+        form.action = `/admin/contributions/cancel/${id}`;
+
+        document.getElementById('modalBatal').classList.remove('hidden');
+    }
+
+    function closeCancelModal() {
+        document.getElementById('modalBatal').classList.add('hidden');
+    }
+</script>

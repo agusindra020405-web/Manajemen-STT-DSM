@@ -38,7 +38,8 @@
                         <select name="status"
                             class="w-full rounded-xl border-2 border-gray-200 py-3 px-4 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none appearance-none bg-white">
                             <option value="Aktif" {{ $member->status == 'Aktif' ? 'selected' : '' }}>Aktif</option>
-                            <option value="Non-Aktif" {{ $member->status == 'Non-Aktif' ? 'selected' : '' }}>Non-Aktif</option>
+                            <option value="Non-Aktif" {{ $member->status == 'Non-Aktif' ? 'selected' : '' }}>Non-Aktif
+                            </option>
                         </select>
                     </div>
                 </div>

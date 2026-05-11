@@ -61,7 +61,7 @@
                         class="nav-item text-white hover:text-emerald-400 font-semibold transition">Home</a>
                     <a href="#" class="nav-item text-white/80 hover:text-emerald-400 transition">Galeri</a>
                     <a href="#" class="nav-item text-white/80 hover:text-emerald-400 transition">Tentang</a>
-                    <a href="{{ route('login') }}"
+                    <a href="/login"
                         class="bg-emerald-700 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-emerald-800 transition shadow-lg shadow-emerald-900/20">
                         Login
                     </a>

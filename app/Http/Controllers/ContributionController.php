@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Member;
 use App\Models\Contribution;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ContributionController extends Controller
 {
@@ -87,20 +89,89 @@ class ContributionController extends Controller
 
     public function payCash(Request $request, $memberId)
     {
-        // Ambil data bulan dan tahun dari request (agar sesuai dengan filter yang sedang dibuka)
+        $request->validate([
+            'bulan' => 'required',
+            'tahun' => 'required',
+        ]);
+
         $bulan = $request->get('bulan');
         $tahun = $request->get('tahun');
 
-        // Simpan data iuran baru
-        Contribution::create([
-            'member_id' => $memberId,
-            'month' => $bulan,
-            'year' => $tahun,
-            'amount' => 50000, 
-            'status' => 'PAID',
-            'payment_method' => 'CASH' 
+        // Update existing iuran jika sudah ada, atau buat baru jika belum ada.
+        Contribution::updateOrCreate(
+            [
+                'member_id' => $memberId,
+                'month' => $bulan,
+                'year' => $tahun,
+            ],
+            [
+                'amount' => 50000,
+                'status' => 'PAID',
+                'payment_method' => 'CASH',
+                'reason_cancel' => null,
+            ]
+        );
+
+        return redirect()->route('admin.contributions.index');
+    }
+
+    public function cancelPayment(Request $request, $id)
+    {
+        // Validasi alasan wajib diisi
+        $request->validate([
+            'reason_cancel' => 'required|string|min:5'
         ]);
 
-        return redirect()->back()->with('success', 'Pembayaran tunai berhasil dicatat!');
+        $contribution = Contribution::findOrFail($id);
+
+        // Opsi A: Update status dan simpan alasan agar ada histori
+        $contribution->update([
+            'status' => 'UNPAID', // Kembalikan ke menunggak
+            'reason_cancel' => $request->reason_cancel,
+            'payment_method' => null // Reset metode pembayaran
+        ]);
+
+        return redirect()->back()->with('success', 'Pembayaran berhasil dibatalkan dengan alasan: ' . $request->reason_cancel);
+    }
+
+
+    public function storeKolektif(Request $request)
+    {
+        $request->validate([
+            'bulan_kolektif' => 'required',
+            'tahun_kolektif' => 'required',
+            'nominal_kolektif' => 'required|numeric',
+        ]);
+
+        $bulan = $request->get('bulan_kolektif');
+        $tahun = $request->get('tahun_kolektif');
+        $nominal = $request->get('nominal_kolektif');
+
+        // Ambil hanya ID untuk efisiensi memori
+        $memberIds = \App\Models\Member::pluck('id');
+
+        DB::transaction(function () use ($memberIds, $bulan, $tahun, $nominal) {
+            foreach ($memberIds as $id) {
+                Contribution::firstOrCreate(
+                    ['member_id' => $id, 'month' => $bulan, 'year' => $tahun],
+                    ['amount' => $nominal, 'status' => 'UNPAID']
+                );
+            }
+        });
+
+        return redirect()->back()->with('success', "Tagihan periode $bulan $tahun berhasil dibuat.");
+    }
+
+    public function printInvoice($id)
+    {
+        $contribution = Contribution::with('member')->findOrFail($id);
+
+        // Nama file PDF yang akan didownload
+        $fileName = 'Invoice-' . $contribution->member->name . '-' . $contribution->month . '.pdf';
+
+        // Memanggil view khusus untuk layout PDF
+        $pdf = Pdf::loadView('admin.contributions.invoice_pdf', compact('contribution'));
+
+        return $pdf->stream($fileName); // .stream agar terbuka di tab baru, .download untuk langsung unduh
     }
 }

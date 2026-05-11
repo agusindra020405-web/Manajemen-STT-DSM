@@ -16,7 +16,9 @@ class Contribution extends Model
         'year',
         'amount',
         'status',
-        'midtrans_token'
+        'payment_method',
+        'midtrans_token',
+        'reason_cancel',
     ];
 
     public function member()

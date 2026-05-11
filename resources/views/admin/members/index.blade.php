@@ -115,16 +115,21 @@
             </table>
             {{-- Bagian Pagination --}}
             <div
-                class="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex flex-col md:flex-row items-center justify-between gap-4">
+                class="px-6 py-3 bg-gray-50/50 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
                 {{-- Info Data Otomatis --}}
-                <p class="text-sm text-gray-500">
-                    Menampilkan <span class="font-medium text-emerald-600">{{ $members->firstItem() }}</span>
-                    sampai <span class="font-medium text-emerald-600">{{ $members->lastItem() }}</span>
-                    dari <span class="font-medium text-emerald-600">{{ $members->total() }}</span> data
+                <p class="text-xs md:text-sm text-gray-500 font-medium">
+                    Menampilkan
+                    <span
+                        class="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">{{ $members->firstItem() ?? 0 }}</span>
+                    sampai
+                    <span
+                        class="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">{{ $members->lastItem() ?? 0 }}</span>
+                    dari
+                    <span class="text-gray-700">{{ $members->total() }}</span> data
                 </p>
 
                 {{-- Tombol Navigasi --}}
-                <div class="pagination-custom">
+                <div class="pagination-custom text-xs">
                     {{ $members->links('pagination::tailwind') }}
                 </div>
             </div>

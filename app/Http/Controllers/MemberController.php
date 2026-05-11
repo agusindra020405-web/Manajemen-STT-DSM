@@ -17,8 +17,8 @@ class MemberController extends Controller
                 ->orWhere('phone', 'like', "%{$search}%")
                 ->orWhere('address', 'like', "%{$search}%");
         })->paginate(20)->withQueryString(); // withQueryString agar pagination tetap bekerja saat searching
-
-        return view('admin.anggota', compact('members'));
+        
+        return view('admin.members.index', compact('members'));
     }
 
     public function store(Request $request)
@@ -27,6 +27,7 @@ class MemberController extends Controller
             'name' => 'required',
             'phone' => 'required',
             'address' => 'required',
+            'status' => 'default:active|in:active,inactive',
         ]);
 
         Member::create($request->all());
@@ -35,7 +36,7 @@ class MemberController extends Controller
 
     public function create()
     {
-        return view('admin.create_anggota');
+        return view('admin.members.create');
     }
 
     public function update(Request $request, Member $member)
@@ -54,7 +55,7 @@ class MemberController extends Controller
     public function edit(Member $member)
     {
         //  menampilkan form edit
-        return view('admin.edit_anggota', compact('member'));
+        return view('admin.members.edit', compact('member'));
     }
 
     public function destroy(Member $member)
