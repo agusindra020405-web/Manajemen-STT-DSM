@@ -21,12 +21,13 @@ class LoginController extends Controller
             // Ambil user yang baru saja login
             $user = Auth::user();
 
-            // Logika pengalihan berdasarkan role
-            if ($user->role === 'pimpinan') {
-                return redirect()->intended('/ketua/dashboard');
+            // 1. Jika role-nya member, diarahkan ke dashboard member
+            if ($user->role === 'member') {
+                return redirect()->intended('/member/dashboard');
             }
 
-            // Default redirect untuk admin
+            // 2. Jika role-nya admin, ketua, atau wakil (semua pengurus),
+            // diarahkan ke halaman dashboard admin yang sama
             return redirect()->intended('/admin/dashboard');
         }
 

@@ -23,8 +23,6 @@ class AuthServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Definisikan 'pimpinan' sebagai Ketua atau Wakil
-        Gate::define('is-pimpinan', function ($user) {
-            return in_array($user->role, ['ketua', 'wakil']);
-        });
+       
     }
 }

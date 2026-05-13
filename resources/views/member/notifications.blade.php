@@ -38,7 +38,8 @@
                 <div class="flex-1 pr-4">
                     <h4 class="text-xs font-extrabold text-slate-800">Tagihan Baru Bulan Mei 2026</h4>
                     <p class="text-xs text-slate-500 mt-1 leading-relaxed">
-                        Tagihan iuran bulan **Mei 2026** sebesar **Rp 50.000** sudah bisa di bayar. Silakan lakukan pembayaran
+                        Tagihan iuran bulan **Mei 2026** sebesar **Rp 50.000** sudah bisa di bayar. Silakan lakukan
+                        pembayaran
                         sebelum akhir bulan.
                     </p>
                 </div>
