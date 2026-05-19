@@ -8,8 +8,43 @@
                 <p class="text-sm text-slate-500 mt-1">Pantau jumlah anggota dan status iuran anggota STT.</p>
             </div>
 
+
+            {{-- Area Kelola Informasi Penting oleh Admin --}}
+            <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Kelola Informasi Penting (Dashboard Anggota)</h3>
+                        <p class="text-xs text-slate-400 mt-0.5">Teks di bawah ini akan langsung tampil di beranda anggota.</p>
+                    </div>
+                </div>
+
+                @if (session('success'))
+                    <div class="mb-3 p-3 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-xl">
+                        {{ session('success') }}
+                    </div>
+                @endif
+
+                <form action="{{ route('admin.announcement.update') }}" method="POST" class="space-y-3">
+                    @csrf
+                    <div class="flex gap-3">
+                        <input type="text" name="content" placeholder="Ketik informasi penting di sini..."
+                            class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+
+                        <button type="submit"
+                            class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition whitespace-nowrap">
+                            Perbarui Info
+                        </button>
+                    </div>
+                    @error('content')
+                        <span class="text-xs text-rose-600 font-medium pl-1">{{ $message }}</span>
+                    @enderror
+                </form>
+            </div>
+
+
             {{-- Form filter bulan: memilih bulan akan mengirim request GET ke route admin.dashboard --}}
-            <form action="{{ route('admin.dashboard') }}" method="GET" id="filterForm" class="flex items-center gap-3">
+            <form action="{{ route('admin.dashboard') }}" method="GET" id="filterForm"
+                class="flex items-center gap-3">
                 <span class="text-sm text-slate-500 font-medium">Data untuk bulan:</span>
                 <div class="relative">
                     <select name="bulan" onchange="document.getElementById('filterForm').submit()"
@@ -45,7 +80,6 @@
 
         {{-- Ringkasan utama: total anggota, total kas, dan jumlah anggota lunas bulan ini --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
             <div
                 class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-5 transition hover:shadow-md">
                 <div class="p-4 bg-emerald-50 text-emerald-600 rounded-2xl">
@@ -86,7 +120,8 @@
                     </svg>
                 </div>
                 <div>
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Anggota Lunas Bulan Ini</p>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Anggota Lunas Bulan Ini
+                    </p>
                     <h3 class="text-2xl font-extrabold text-slate-800 mt-1">
                         {{ $totalLunas }} <span class="text-sm font-normal text-slate-400">/
                             {{ $totalAnggota }}</span>
@@ -115,7 +150,8 @@
 
                         <circle id="progressLunas" cx="88" cy="88" r="74"
                             class="text-emerald-500 transition-all ease-out" stroke-width="14" stroke-dasharray="465"
-                            stroke-dashoffset="465" stroke-linecap="round" stroke="currentColor" fill="transparent" />
+                            stroke-dashoffset="465" stroke-linecap="round" stroke="currentColor"
+                            fill="transparent" />
 
                         <circle id="progressBelumLunas" cx="88" cy="88" r="74"
                             class="text-rose-500 transition-all ease-out" stroke-width="14" stroke-dasharray="465"

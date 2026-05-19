@@ -23,11 +23,6 @@
                     <span class="text-[10px] font-semibold text-emerald-600 tracking-wider">SATYA MANDALA</span>
                 </div>
             </div>
-
-            <button class="relative p-2 text-slate-400 hover:text-slate-600 focus:outline-none">
-                <i data-lucide="bell" class="w-6 h-6"></i>
-                <span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white"></span>
-            </button>
         </div>
     </header>
 
@@ -48,20 +43,6 @@
                 class="flex flex-col items-center gap-1 {{ Route::is('member.history') ? 'text-emerald-600' : 'text-slate-400 hover:text-slate-600' }}">
                 <i data-lucide="receipt" class="w-5 h-5"></i>
                 <span class="text-[10px] font-medium">Riwayat</span>
-            </a>
-
-            <a href="#" class="flex flex-col items-center -mt-6">
-                <div
-                    class="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition">
-                    <i data-lucide="qr-code" class="w-6 h-6"></i>
-                </div>
-                <span class="text-[10px] font-bold text-emerald-600 mt-1">Bayar</span>
-            </a>
-
-            <a href="{{ route('member.notifications') }}"
-                class="flex flex-col items-center justify-center gap-1 {{ request()->routeIs('member.notifications') ? 'text-emerald-600' : 'text-slate-400' }}">
-                <i data-lucide="bell" class="w-5 h-5"></i>
-                <span class="text-[10px] font-bold">Notifikasi</span>
             </a>
 
             <a href="{{ route('member.settings') }}"

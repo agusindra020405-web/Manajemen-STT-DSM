@@ -4,7 +4,9 @@
     <div class="space-y-6">
 
         <div>
-            <h2 class="text-xl font-extrabold text-slate-800">Halo,{{ $member->name ?? 'A.A Agung Sastra' }} </h2>
+            <h2 class="text-xl font-extrabold text-slate-800">
+                Halo, {{ auth()->user()->name }}
+            </h2>
             <p class="text-xs text-slate-500 mt-1">Anggota STT Dharma Satya Mandala</p>
         </div>
 
@@ -26,7 +28,7 @@
             </p>
         </div>
 
-        <div class="grid grid-cols-4 gap-3">
+        <div class="grid grid-cols-3 gap-3 justify-center max-w-sm mx-auto">
             <a href="{{ route('member.history') }}"
                 class="bg-white border border-slate-100 p-3 rounded-xl flex flex-col items-center justify-center gap-1.5 shadow-sm active:bg-slate-50">
                 <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
@@ -41,14 +43,6 @@
                     <i data-lucide="wallet" class="w-5 h-5"></i>
                 </div>
                 <span class="text-[10px] font-bold text-slate-700 text-center leading-tight">Pembayaran</span>
-            </a>
-
-            <a href="#"
-                class="bg-white border border-slate-100 p-3 rounded-xl flex flex-col items-center justify-center gap-1.5 shadow-sm active:bg-slate-50">
-                <div class="w-10 h-10 bg-purple-50 text-purple-600 rounded-lg flex items-center justify-center">
-                    <i data-lucide="bell" class="w-5 h-5"></i>
-                </div>
-                <span class="text-[10px] font-bold text-slate-700 text-center leading-tight">Notifikasi</span>
             </a>
 
             <a href="{{ route('member.settings') }}"
@@ -68,7 +62,7 @@
                 <div class="flex-1">
                     <h4 class="text-xs font-bold text-slate-800">Informasi Penting</h4>
                     <p class="text-xs text-slate-500 mt-1 leading-relaxed">
-                        Pembayaran iuran bulan Mei 2026 sudah dapat dilakukan. 
+                        {{ $infoPenting }}
                     </p>
                 </div>
             </div>

@@ -20,7 +20,7 @@ Route::get('/', function () {
 
 Route::get('/login', function () {
     return view('login');
-});
+})->name('login');
 
 // Proses login
 Route::post('/login', [LoginController::class, 'login']);
@@ -31,6 +31,8 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // --- 2. HALAMAN TERPROTEKSI (HARUS LOGIN) ---
 Route::middleware('auth')->group(function () {
+
+    // --- GRUP ROUTE ADMIN ---
     Route::group(['prefix' => 'admin'], function () {
         Route::get('dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
 
@@ -41,30 +43,31 @@ Route::middleware('auth')->group(function () {
         // --- MANAJEMEN IURAN (CONTRIBUTIONS) ---
         Route::get('contributions', [ContributionController::class, 'index'])->name('admin.contributions.index');
 
-        // B. Proses Pembayaran Tunai (Hanya Admin yang akses di Blade)
-        // Jika URL ini diakses langsung dengan GET, arahkan kembali ke daftar iuran.
+        // Proses Pembayaran Tunai
         Route::get('contributions/pay-cash/{member_id}', function () {
-            return redirect()->route('admin.contributions.index')->with('error', 'Akses langsung tidak didukung. Gunakan tombol Konfirmasi Tunai.');
+            return redirect()->route('admin.contributions.index')->with('error', 'Akses langsung tidak didukung.');
         });
 
         Route::post('contributions/pay-cash/{member_id}', [ContributionController::class, 'payCash'])
             ->name('admin.contributions.payCash');
 
-        // Resource tambahan (jika butuh create/edit/show)
-        Route::resource('contributions', ContributionController::class)->except(['index']);
-
-        // untuk dompdf dan create iuran
+        // Untuk dompdf dan create iuran
         Route::post('contributions/storeKolektif', [ContributionController::class, 'storeKolektif'])->name('admin.contributions.storeKolektif');
-        Route::get('contributions/print/{id}', [ContributionController::class, 'printInvoice'])->name('admin.contributions.print');
-
+        Route::post('contributions/print/{id}', [ContributionController::class, 'printInvoice'])->name('admin.contributions.print');
         Route::post('contributions/cancel/{id}', [ContributionController::class, 'cancelPayment'])->name('admin.contributions.cancel');
+
+        // Resource tambahan
+        Route::resource('contributions', ContributionController::class)->except(['index']);
     });
-});
-// tampilan anggota
-Route::group(['prefix' => 'member', 'as' => 'member.'], function () {
-    Route::get('/dashboard', [DashboardController::class, 'memberDashboard'])->name('dashboard');
-    Route::get('/history', [DashboardController::class, 'memberHistory'])->name('history');
-    Route::get('/settings', [DashboardController::class, 'memberSettings'])->name('settings');
-    Route::put('/settings/password', [DashboardController::class, 'updatePassword'])->name('password.update');
-    Route::get('/notifications', [DashboardController::class, 'memberNotifications'])->name('notifications');
+
+    // --- GRUP ROUTE ANGGOTA (MEMBER) ---
+    Route::group(['prefix' => 'member', 'as' => 'member.'], function () {
+        Route::get('/dashboard', [DashboardController::class, 'memberDashboard'])->name('dashboard');
+        Route::get('/history', [DashboardController::class, 'memberHistory'])->name('history');
+        Route::get('/settings', [DashboardController::class, 'memberSettings'])->name('settings');
+        Route::put('/settings/password', [DashboardController::class, 'updatePassword'])->name('password.update');
+    });
+
+    //untuk menampilkan informasi di dashboard anggota
+   Route::post('/admin/announcement',[DashboardController::class, 'updateAnnouncement'])->name('admin.announcement.update');
 });

@@ -4,9 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Member;
 use App\Models\Contribution;
+use App\Models\Announcement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -83,28 +87,41 @@ class DashboardController extends Controller
             'bulanIndoStr'
         ));
     }
+    /**
+     * Method untuk menyimpan atau memperbarui informasi penting dari admin
+     */
 
-    // ==========================================
-    // METHOD BARU KHUSUS HALAMAN ANGOTA (MEMBER)
-    // ==========================================
+    public function updateAnnouncement(Request $request)
+    {
+        $request->validate([
+            'content' => 'required|string|max:500'
+        ], [
+            'content.required' => ' Isi informasi tidak boleh kosong.'
+        ]);
+
+        //simpan data baru ke database
+        Announcement::create([
+            'content' => $request->content
+        ]);
+
+        return back()->with('success', 'Informasi penting berhasil diperbarui!');
+    }
 
     /**
-     * Tampilan Beranda Anggota (Sesuai Mockup Mobile)
+     * Tampilan Beranda Anggota
      */
     public function memberDashboard()
     {
-        // --- BYPASS DATABASE START ---
-        // $user = Auth::user();
-
-        // 2. Buat objek member palsu
-        $member = new \stdClass();
-        $member->name = 'A.A Agung Sastra';
-
-        // 3. Set total tunggakan palsu
+        //Set total tunggakan
         $totalTunggakan = 50000; // Contoh: Tunggakan Rp 50.000
-        // --- BYPASS DATABASE END ---
 
-        return view('member.dashboard', compact('member', 'totalTunggakan'));
+        //untuk mengambil data terakhir dari database
+        $latestAnnouncement = Announcement::latest()->first();
+
+        //jika belum ada informasi
+        $infoPenting = $latestAnnouncement ? $latestAnnouncement->content : "Belum ada informasi terbaru dari pengurus.";
+
+        return view('member.dashboard', compact('totalTunggakan', 'infoPenting'));
     }
 
     /**
@@ -112,80 +129,94 @@ class DashboardController extends Controller
      */
     public function memberHistory()
     {
-        // --- BYPASS DATABASE START ---
-        // Buat objek member palsu
-        $member = new \stdClass();
-        $member->name = 'A.A Agung Sastra';
+        $userId = Auth::id();
+        $memberId = Member::where('user_id', $userId)->value('id');
+        $year = Carbon::now()->format('Y');
+        $defaultAmount = 50000;
 
-        // Set summary palsu
-        $totalLunas = 350000;
-        $totalTunggakan = 50000;
+        $existingContributions = Contribution::where('member_id', $memberId)
+            ->where('year', $year)
+            ->get()
+            ->keyBy(function ($item) {
+                return strtolower($item->month);
+            });
 
-        // Buat koleksi histori iuran palsu (dummy)
-        $historiIuran = collect([
-            (object)[
-                'month' => 'Mei',
-                'year' => '2026',
-                'amount' => 50000,
-                'status' => 'UNPAID',
-                'paid_at' => null
-            ],
-            (object)[
-                'month' => 'April',
-                'year' => '2026',
-                'amount' => 50000,
-                'status' => 'PAID',
-                'paid_at' => '2026-04-05 10:00:00'
-            ],
-            (object)[
-                'month' => 'Maret',
-                'year' => '2026',
-                'amount' => 100000, // Iuran dobel misalnya
-                'status' => 'PAID',
-                'paid_at' => '2026-03-10 14:30:00'
-            ],
-            (object)[
-                'month' => 'Februari',
-                'year' => '2026',
-                'amount' => 50000,
-                'status' => 'PAID',
-                'paid_at' => '2026-02-01 09:15:00'
-            ],
-            (object)[
-                'month' => 'Januari',
-                'year' => '2026',
-                'amount' => 50000,
-                'status' => 'PAID',
-                'paid_at' => '2026-01-05 08:00:00'
-            ]
-        ]);
-        // --- BYPASS DATABASE END ---
+        $monthMap = [
+            'december'  => 'Desember',
+            'november'  => 'November',
+            'october'   => 'Oktober',
+            'september' => 'September',
+            'august'    => 'Agustus',
+            'july'      => 'Juli',
+            'june'      => 'Juni',
+            'may'       => 'Mei',
+            'april'     => 'April',
+            'march'     => 'Maret',
+            'february'  => 'Februari',
+            'january'   => 'Januari'
+        ];
 
-        return view('member.history', compact('member', 'historiIuran', 'totalLunas', 'totalTunggakan'));
+        $contributions = [];
+
+        foreach ($monthMap as $englishMonth => $indonesianMonth) {
+            if ($existingContributions->has($englishMonth)) {
+                $dbData = $existingContributions->get($englishMonth);
+
+                $contributions[] = (object)[
+                    'month'   => $indonesianMonth,
+                    'year'    => $dbData->year,
+                    'amount'  => $dbData->amount,
+                    'status'  => $dbData->status,
+                    'paid_at' => $dbData->created_at ? $dbData->created_at->toDateTimeString() : null
+                ];
+            } else {
+                $contributions[] = (object)[
+                    'month'   => $indonesianMonth,
+                    'year'    => $year,
+                    'amount'  => $defaultAmount,
+                    'status'  => 'UNPAID',
+                    'paid_at' => null
+                ];
+            }
+        }
+
+        return view('member.history', compact('contributions'));
     }
 
     /**
      * Tampilan Pengaturan Akun Anggota
      */
+
     public function memberSettings()
     {
-        // --- BYPASS DATABASE START ---
-        // Buat objek user palsu
-        $user = new \stdClass();
-        $user->email = 'A.A.dummy@example.com';
-        $user->created_at = '2026-01-01 10:00:00';
-
-        // Buat objek member palsu
-        $member = new \stdClass();
-        $member->name = 'A.A Agung Sastra';
-        // --- BYPASS DATABASE END ---
+        // Mengambil data user yang sedang login beserta relasi member-nya
+        $user = Auth::user();
+        $member = $user->member;
 
         return view('member.settings', compact('user', 'member'));
     }
 
-    public function memberNotifications()
+    /**
+     * Memproses perubahan password
+     */
+    public function updatePassword(Request $request)
     {
-        // Mengembalikan tampilan halaman notifikasi
-        return view('member.notifications');
+        // Validasi input
+        $request->validate([
+            'current_password' => ['required', 'current_password'], // Cek apakah password lama benar
+            'password' => ['required', 'confirmed', Password::min(8)], // Password baru min 8 karakter & cocok dengan konfirmasi
+        ], [
+            'current_password.current_password' => 'Password lama yang Anda masukkan salah.',
+            'password.confirmed' => 'Konfirmasi password baru tidak cocok.',
+            'password.min' => 'Password baru minimal harus 8 karakter.',
+        ]);
+
+        // Update password di tabel users
+        $user = $request->user();
+        $user->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        return back()->with('success', 'Password Anda berhasil diperbarui.');
     }
 }
