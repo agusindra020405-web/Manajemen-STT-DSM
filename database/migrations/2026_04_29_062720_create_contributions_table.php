@@ -18,7 +18,6 @@ return new class extends Migration
             $table->year('year');
             $table->integer('amount');
             $table->enum('status', ['PAID', 'UNPAID'])->default('UNPAID');
-            $table->string('midtrans_token')->nullable();
             $table->timestamps();
         });
     }

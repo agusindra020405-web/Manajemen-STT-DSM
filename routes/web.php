@@ -66,8 +66,20 @@ Route::middleware('auth')->group(function () {
         Route::get('/history', [DashboardController::class, 'memberHistory'])->name('history');
         Route::get('/settings', [DashboardController::class, 'memberSettings'])->name('settings');
         Route::put('/settings/password', [DashboardController::class, 'updatePassword'])->name('password.update');
+        Route::get('/payment-success', [DashboardController::class, 'paymentSuccess'])->name('payment-success');
+        Route::get('/payment-failed', [DashboardController::class, 'paymentFailed'])->name('payment-failed');
     });
 
     //untuk menampilkan informasi di dashboard anggota
-   Route::post('/admin/announcement',[DashboardController::class, 'updateAnnouncement'])->name('admin.announcement.update');
+    Route::post('/admin/announcement', [DashboardController::class, 'updateAnnouncement'])->name('admin.announcement.update');
+
+    Route::group(['prefix' => 'member', 'as' => 'member.'], function () {
+        Route::get('/dashboard', [DashboardController::class, 'memberDashboard'])->name('dashboard');
+
+        // Route untuk memproses pembuatan link Xendit
+        Route::post('/pay-xendit', [DashboardController::class, 'payXendit'])->name('payXendit');
+
+        // Halaman Riwayat Pembayaran (Tempat menampung user kembali dari Xendit)
+        Route::get('/history', [DashboardController::class, 'memberHistory'])->name('history');
+    });
 });

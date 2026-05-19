@@ -17,7 +17,9 @@ class Contribution extends Model
         'amount',
         'status',
         'payment_method',
-        'midtrans_token',
+        'xendit_invoice_id',
+        'checkout_url',
+        'xendit_response',
         'reason_cancel',
     ];
 

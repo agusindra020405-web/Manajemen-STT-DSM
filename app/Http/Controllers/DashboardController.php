@@ -6,6 +6,7 @@ use App\Models\Member;
 use App\Models\Contribution;
 use App\Models\Announcement;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -112,6 +113,9 @@ class DashboardController extends Controller
      */
     public function memberDashboard()
     {
+        //Hubungkan ke user yang sedang login
+        $member = Auth::user();
+
         //Set total tunggakan
         $totalTunggakan = 50000; // Contoh: Tunggakan Rp 50.000
 
@@ -121,67 +125,13 @@ class DashboardController extends Controller
         //jika belum ada informasi
         $infoPenting = $latestAnnouncement ? $latestAnnouncement->content : "Belum ada informasi terbaru dari pengurus.";
 
-        return view('member.dashboard', compact('totalTunggakan', 'infoPenting'));
+        return view('member.dashboard', compact('member', 'totalTunggakan', 'infoPenting'));
     }
 
     /**
      * Tampilan Histori Pembayaran Anggota
      */
-    public function memberHistory()
-    {
-        $userId = Auth::id();
-        $memberId = Member::where('user_id', $userId)->value('id');
-        $year = Carbon::now()->format('Y');
-        $defaultAmount = 50000;
 
-        $existingContributions = Contribution::where('member_id', $memberId)
-            ->where('year', $year)
-            ->get()
-            ->keyBy(function ($item) {
-                return strtolower($item->month);
-            });
-
-        $monthMap = [
-            'december'  => 'Desember',
-            'november'  => 'November',
-            'october'   => 'Oktober',
-            'september' => 'September',
-            'august'    => 'Agustus',
-            'july'      => 'Juli',
-            'june'      => 'Juni',
-            'may'       => 'Mei',
-            'april'     => 'April',
-            'march'     => 'Maret',
-            'february'  => 'Februari',
-            'january'   => 'Januari'
-        ];
-
-        $contributions = [];
-
-        foreach ($monthMap as $englishMonth => $indonesianMonth) {
-            if ($existingContributions->has($englishMonth)) {
-                $dbData = $existingContributions->get($englishMonth);
-
-                $contributions[] = (object)[
-                    'month'   => $indonesianMonth,
-                    'year'    => $dbData->year,
-                    'amount'  => $dbData->amount,
-                    'status'  => $dbData->status,
-                    'paid_at' => $dbData->created_at ? $dbData->created_at->toDateTimeString() : null
-                ];
-            } else {
-                $contributions[] = (object)[
-                    'month'   => $indonesianMonth,
-                    'year'    => $year,
-                    'amount'  => $defaultAmount,
-                    'status'  => 'UNPAID',
-                    'paid_at' => null
-                ];
-            }
-        }
-
-        return view('member.history', compact('contributions'));
-    }
 
     /**
      * Tampilan Pengaturan Akun Anggota
@@ -218,5 +168,202 @@ class DashboardController extends Controller
         ]);
 
         return back()->with('success', 'Password Anda berhasil diperbarui.');
+    }
+
+    public function payXendit(Request $request)
+    {
+        $user = Auth::user();
+        $amount = 50000;
+        $referenceId = 'STTDSM-' . time() . '-' . $user->id; // Format ID unik transaksi
+
+        //Ambil konfigurasi dari config/services.php
+        $baseUrl = rtrim((string) config('services.xendit.base_url', 'https://api.xendit.co'), '/');
+        $secretKey = (string) config('services.xendit.secret_key');
+
+        //Menyusun parameter URL balik dengan reference_id
+        $successUrl = config('services.xendit.success_url') . (str_contains(config('services.xendit.success_url'), '?') ? '&' : '?') . 'reference_id=' . urlencode($referenceId);
+        $failureUrl = config('services.xendit.failure_url') . (str_contains(config('services.xendit.failure_url'), '?') ? '&' : '?') . 'reference_id=' . urlencode($referenceId);
+
+        //Payload 
+        $payload = [
+            'external_id'           => $referenceId,
+            'amount'                => $amount,
+            'description'           => 'Pembayaran Iuran STT Dharma Satya Mandala - ' . $user->name,
+            'invoice_duration'      => 86400,
+            'currency'              => 'IDR',
+            'success_redirect_url' => $successUrl,
+            'failure_redirect_url' => $failureUrl,
+            'should_send_email'    => false,
+            'customer' => array_filter([
+                'given_names'   => $user->name,
+                'email'         => $user->email ?? null,
+                'mobile_number' => $user->phone ?? null,
+            ]),
+            'items' => [
+                [
+                    'name'     => 'Iuran Anggota STT DSM',
+                    'quantity' => 1,
+                    'price'    => $amount,
+                ]
+            ],
+        ];
+
+        try {
+            // Request POST ke Xendit Invoice V2
+            $response = Http::timeout(30)
+                ->withBasicAuth($secretKey, '')
+                ->withHeaders(['Accept' => 'application/json'])
+                ->post($baseUrl . '/v2/invoices', $payload);
+
+            if ($response->successful()) {
+                $invoice = $response->json();
+
+                // Simpan ke database
+                Contribution::updateOrCreate(
+                    [
+                        'member_id' => $user->member->id,
+                        'month' => Carbon::now()->format('F'),
+                        'year' => Carbon::now()->format('Y'),
+                    ],
+                    [
+                        'amount' => $amount,
+                        'status' => 'UNPAID',
+                        'payment_method' => 'XENDIT',
+                    ]
+                );
+
+                return redirect()->away($invoice['invoice_url']);
+            }
+
+            return back()->with('error', 'Gagal membuat invoice ke Xendit: ' . $response->body());
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal terhubung ke layanan Xendit: ' . $e->getMessage());
+        }
+    }
+
+
+    /**
+     * Tampilan Riwayat Pembayaran + Mekanisme Status Polling Otomatis
+     */
+    public function memberHistory(Request $request)
+    {
+        // Ambil user yang sedang login
+        $user = Auth::user();
+
+        // Ambil member_id berdasarkan relasi user -> member
+        $memberId = Member::where('user_id', $user->id)->value('id');
+
+        // Tahun sekarang untuk menampilkan histori tahun berjalan
+        $year = Carbon::now()->format('Y');
+
+        // Nominal default jika belum ada kontribusi
+        $defaultAmount = 50000;
+
+        // Ambil semua kontribusi anggota untuk tahun berjalan, lalu keyBy month lowercase
+        $existingContributions = Contribution::where('member_id', $memberId)
+            ->where('year', $year)
+            ->get()
+            ->keyBy(function ($item) {
+                return strtolower($item->month);
+            });
+
+        // Peta bulan Inggris ke Indonesia untuk tampilan
+        $monthMap = [
+            'december'  => 'Desember',
+            'november'  => 'November',
+            'october'   => 'Oktober',
+            'september' => 'September',
+            'august'    => 'Agustus',
+            'july'      => 'Juli',
+            'june'      => 'Juni',
+            'may'       => 'Mei',
+            'april'     => 'April',
+            'march'     => 'Maret',
+            'february'  => 'Februari',
+            'january'   => 'Januari'
+        ];
+
+        $contributions = [];
+
+        // Buat daftar bulan berdasarkan mapping
+        foreach ($monthMap as $englishMonth => $indonesianMonth) {
+            if ($existingContributions->has($englishMonth)) {
+                $dbData = $existingContributions->get($englishMonth);
+
+                // Jika sudah ada data kontribusi, gunakan data tersebut
+                $contributions[] = (object)[
+                    'month'   => $indonesianMonth,
+                    'year'    => $dbData->year,
+                    'amount'  => $dbData->amount,
+                    'status'  => $dbData->status,
+                    'paid_at' => $dbData->created_at ? $dbData->created_at->toDateTimeString() : null,
+                ];
+            } else {
+                // Jika belum ada kontribusi untuk bulan ini, tampilkan default UNPAID
+                $contributions[] = (object)[
+                    'month'   => $indonesianMonth,
+                    'year'    => $year,
+                    'amount'  => $defaultAmount,
+                    'status'  => 'UNPAID',
+                    'paid_at' => null,
+                ];
+            }
+        }
+
+        // Ambil parameter reference_id dari URL jika Xendit mengembalikan callback
+        $referenceId = $request->string('reference_id')->toString();
+
+        $paymentStatus = null;
+        $paymentMessage = null;
+
+        if ($referenceId !== '') {
+            // Ambil konfigurasi Xendit dari services.php
+            $baseUrl = rtrim((string) config('services.xendit.base_url', 'https://api.xendit.co'), '/');
+            $secretKey = (string) config('services.xendit.secret_key');
+
+            // Cek status invoice Xendit berdasarkan external_id
+            $response = Http::timeout(30)
+                ->withBasicAuth($secretKey, '')
+                ->withHeaders(['Accept' => 'application/json'])
+                ->get($baseUrl . '/v2/invoices?external_id=' . urlencode($referenceId));
+
+            if ($response->successful() && !empty($response->json())) {
+                $invoices = $response->json();
+                $invoiceData = $invoices[0] ?? null;
+
+                if ($invoiceData) {
+                    $status = strtoupper($invoiceData['status']);
+                    $paymentStatus = in_array($status, ['PAID', 'SETTLED']) ? 'paid' : 'pending';
+                    $paymentMessage = 'Status pembayaran: ' . $status;
+                } else {
+                    $paymentStatus = 'not_found';
+                    $paymentMessage = 'Invoice tidak ditemukan.';
+                }
+            } else {
+                $paymentStatus = 'error';
+                $paymentMessage = 'Gagal cek status pembayaran: ' . $response->body();
+            }
+        }
+
+        // Kirim data ke view member.history
+        return view('member.history', compact(
+            'contributions',
+            'paymentStatus',
+            'paymentMessage',
+            'referenceId'
+        ));
+    }
+
+    public function paymentSuccess(Request $request)
+    {
+        $invoiceId = $request->get('invoice_id');
+        // Polling ke Xendit untuk cek status
+        // Update contribution status jika PAID
+        return view('member.payment-result', ['status' => 'success']);
+    }
+
+    public function paymentFailed(Request $request)
+    {
+        return view('member.payment-result', ['status' => 'failed']);
     }
 }

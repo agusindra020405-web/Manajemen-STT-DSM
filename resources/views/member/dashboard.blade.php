@@ -18,10 +18,13 @@
             <p class="text-xs text-emerald-200/90 font-medium tracking-wide">Total tunggakan </p>
             <p class="text-3xl font-extrabold mt-1">Rp {{ number_format($totalTunggakan, 0, ',', '.') }}</p>
 
-            <button
-                class="w-full bg-white text-emerald-900 font-bold py-3 px-4 rounded-xl mt-5 shadow-md hover:bg-emerald-50 transition active:scale-95 text-sm flex items-center justify-center gap-2">
-                Bayar Sekarang
-            </button>
+            <form action="{{ route('member.payXendit') }}" method="POST">
+                @csrf
+                <button type="submit"
+                    class="w-full bg-white text-emerald-900 font-bold py-3 px-4 rounded-xl mt-5 shadow-md hover:bg-emerald-50 transition active:scale-95 text-sm flex items-center justify-center gap-2">
+                    Bayar Sekarang
+                </button>
+            </form>
 
             <p class="text-[10px] text-emerald-200/70 text-center mt-3 flex items-center justify-center gap-1">
                 <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Aman, cepat, dan mudah
