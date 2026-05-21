@@ -50,25 +50,6 @@
                 </div>
             </div>
         </div>
-
-        <div class="bg-white p-6 rounded-2xl border-2 border-emerald-50 shadow-sm flex flex-col justify-between">
-            <div>
-                <div class="flex justify-between items-center mb-4">
-                    <h4 class="font-bold text-gray-800 text-sm">Pembayaran Digital</h4>
-                    <span
-                        class="px-2 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-lg uppercase tracking-tight">Status:
-                        Aktif</span>
-                </div>
-                <div class="flex items-center gap-3 mb-4">
-                    <img src="" alt="Midtrans" class="h-6">
-                </div>
-                <p class="text-xs text-gray-500 leading-relaxed">Anggota dapat membayar iuran secara mandiri via
-                    Midtrans.</p>
-            </div>
-            <button
-                class="w-full mt-4 py-2 border-2 border-gray-200 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 transition">Atur
-                Midtrans</button>
-        </div>
     </div>
 
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -122,11 +103,6 @@
                         @endif
                     </div>
                 </form>
-
-                <button onclick="openModal()"
-                    class="px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl shadow-md hover:bg-emerald-700 transition">
-                    + Buat Iuran Baru
-                </button>
             </div>
         </div>
 
@@ -253,61 +229,6 @@
                     <div class="pagination-emerald">
                         {{ $members->links() }}
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- membuat iuran baru -->
-    <div id="modalIuranKolektif" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900 bg-opacity-50">
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-                <div class="p-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">Buat Tagihan Baru</h3>
-
-                    <form action="{{ route('admin.contributions.storeKolektif') }}" method="POST">
-                        @csrf
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Bulan Iuran</label>
-                                <select name="bulan_kolektif" class="w-full border-gray-200 rounded-xl text-sm">
-                                    @foreach (['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] as $m)
-                                        <option value="{{ $m }}" {{ date('F') == $m ? 'selected' : '' }}>
-                                            {{ $m }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Tahun</label>
-                                <input type="number" name="tahun_kolektif" value="{{ date('Y') }}"
-                                    class="w-full border-gray-200 rounded-xl text-sm">
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Nominal
-                                    (Rp)</label>
-                                <input type="number" name="nominal_kolektif" value="50000"
-                                    class="w-full border-gray-200 rounded-xl text-sm">
-                            </div>
-
-                            <div class="p-3 bg-emerald-50 rounded-lg">
-                                <p class="text-[11px] text-emerald-700 leading-relaxed">
-                                    <strong>Info:</strong> Tagihan akan dibuat otomatis untuk <strong>seluruh
-                                        anggota</strong>
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="flex justify-end gap-3 mt-6">
-                            <button type="button" onclick="closeModal()"
-                                class="text-sm font-bold text-gray-500 hover:text-gray-700">Batal</button>
-                            <button type="submit"
-                                class="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition">
-                                Simpan & Kirim
-                            </button>
-                        </div>
-                    </form>
                 </div>
             </div>
         </div>

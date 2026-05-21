@@ -81,5 +81,7 @@ Route::middleware('auth')->group(function () {
 
         // Halaman Riwayat Pembayaran (Tempat menampung user kembali dari Xendit)
         Route::get('/history', [DashboardController::class, 'memberHistory'])->name('history');
+
+        Route::get('/payment/success', [DashboardController::class, 'paymentSuccess'])->name('payment.success');
     });
 });

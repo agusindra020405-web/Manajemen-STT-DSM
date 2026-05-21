@@ -17,6 +17,7 @@ class Contribution extends Model
         'amount',
         'status',
         'payment_method',
+        'reference_id',
         'xendit_invoice_id',
         'checkout_url',
         'xendit_response',
